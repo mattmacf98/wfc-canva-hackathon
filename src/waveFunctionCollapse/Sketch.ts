@@ -7,8 +7,8 @@ const DISTANCE_THRESHOLD = 200;
 export class Sketch {
     private readonly dim: number;
     private readonly canvasDimension: number;
-    private readonly path: string;
     private readonly numTiles: number;
+    private readonly imageFiles: File[];
     private tileImages: p5.Image[];
     private tiles: Tile[];
     private sideSocketColorVectors: number[][];
@@ -20,12 +20,12 @@ export class Sketch {
     private p: p5;
     private loop: boolean;
 
-    constructor(canvasDimension: number, dim: number, path: string, numTiles: number) {
+    constructor(canvasDimension: number, dim: number, imageFiles: File[]) {
         this.dim = dim;
         this.canvasDimension = canvasDimension;
         this.cellSize = canvasDimension / dim;
-        this.path = path;
-        this.numTiles = numTiles;
+        this.numTiles = imageFiles.length;
+        this.imageFiles = imageFiles;
 
         this.loop = false;
         this.tileImages = [];
@@ -70,9 +70,10 @@ export class Sketch {
 
     public createSketch = () => (p: p5) => {
         this.p = p;
-        p.preload = () => {
+        p.preload = async () => {
             for (let i = 0; i < this.numTiles; i++) {
-                this.tileImages[i] = p.loadImage(`${this.path}/${i}.png`);
+                const imageUrl = URL.createObjectURL(this.imageFiles[i]);
+                this.tileImages[i] = p.loadImage(imageUrl);
             }
         }
         p.setup = () => {
@@ -251,6 +252,15 @@ export class Sketch {
             }
         };
     };
+
+    private fileToBase64(file: File) {
+        return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = error => reject(error);
+        });
+    }
 
     private checkValid(arr: number[], valid: number[]) {
         for (let i = arr.length - 1; i >= 0; i--) {
