@@ -1,6 +1,6 @@
 import {ChangeEvent, FC, forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
 import p5 from "p5";
-import {Button, Col, Container, Row} from "react-bootstrap";
+import {Button, Col, Container, Row, Form} from "react-bootstrap";
 import {Sketch} from "./waveFunctionCollapse/Sketch";
 declare global {
     interface Window {
@@ -17,6 +17,7 @@ export const App = () => {
     }
     const p5SketchRef = useRef(null);
     const [files, setFiles] = useState<File[]>([]);
+    const [dimension, setDimension] = useState<number>(6);
 
     async function talkToAi() {
           const [ response ] = await window.ai.generateText(
@@ -39,6 +40,20 @@ export const App = () => {
               <Row className="justify-content-center mb-3">
                   <Col xs="auto">
                       <h2>Wave Function Collapse Generator</h2>
+                      <div className="p-3">
+                          <Form.Group controlId="exampleForm.ControlRange1">
+                              <Form.Label>Choose a value:</Form.Label>
+                              <Form.Range
+                                  min={4}
+                                  max={30}
+                                  value={dimension}
+                                  onChange={(e: ChangeEvent<HTMLInputElement>) => setDimension(Number(e.target.value))}
+                              />
+                              <Form.Text className="text-muted">
+                                  {dimension}x{dimension}
+                              </Form.Text>
+                          </Form.Group>
+                      </div>
                   </Col>
               </Row>
               <Row className="flex-grow-1 justify-content-center align-items-center">
@@ -51,7 +66,7 @@ export const App = () => {
                       }>
                           {
                               files.length > 0 &&
-                              <P5Sketch canvasDimension={canvasDimension} ref={p5SketchRef} files={files}/>
+                              <P5Sketch canvasDimension={canvasDimension} ref={p5SketchRef} files={files} dimension={dimension}/>
                           }
                       </div>
                   </Col>
@@ -74,6 +89,7 @@ export const App = () => {
                       <Button variant="secondary" style={buttonSpacing} onClick={() => p5SketchRef.current.goBack()}>Back</Button>
                       <Button variant="secondary" style={buttonSpacing} onClick={() => p5SketchRef.current.drawNext()}>Next</Button>
                       <Button variant="primary" style={buttonSpacing} onClick={() => p5SketchRef.current.completeDrawing()}>Auto-complete</Button>
+                      <Button variant="warning" style={buttonSpacing} onClick={() => p5SketchRef.current.startOver()}>Start Over</Button>
                       <Button onClick={() => talkToAi()}>Talk To AI</Button>
                   </Col>
               </Row>
@@ -83,35 +99,39 @@ export const App = () => {
 
 interface IProps {
     canvasDimension: number;
+    dimension: number;
     files: File[];
 }
 const P5Sketch: FC = forwardRef((props: IProps, ref) => {
-    const sketchRef = useRef<HTMLDivElement | null>(null);
-    let sketch: Sketch | null = null;
+    const p5Ref = useRef<HTMLDivElement | null>(null);
+    const sketchRef = useRef<Sketch | null>(null);
 
     useImperativeHandle(ref, () => ({
         drawNext: () => {
-            sketch?.drawNext();
+            sketchRef.current?.drawNext();
         },
         goBack: () => {
-            sketch?.goBack();
+            sketchRef.current?.goBack();
         },
         completeDrawing: () => {
-            sketch?.completeDrawing();
+            sketchRef.current?.completeDrawing();
+        },
+        startOver: () => {
+            sketchRef.current?.startOver();
         }
     }), [])
 
     useEffect(() => {
-        sketch = new Sketch(props.canvasDimension, 20, props.files);
+        sketchRef.current = new Sketch(props.canvasDimension, props.dimension, props.files);
 
-        const p5Instance = new p5(sketch.createSketch(), sketchRef.current!);
+        const p5Instance = new p5(sketchRef.current!.createSketch(), p5Ref.current!);
 
         return () => {
             p5Instance.remove();
         };
-    }, [props.files])
+    }, [props.files, props.dimension])
 
-    return <div ref={sketchRef} style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%'}}></div>
+    return <div ref={p5Ref} style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%'}}></div>
 });
 
 export default App

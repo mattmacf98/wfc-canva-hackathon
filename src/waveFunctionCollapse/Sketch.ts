@@ -2,7 +2,7 @@ import p5 from "p5";
 import {Tile} from "./Tile";
 import {Cell} from "./Cell";
 
-const DISTANCE_THRESHOLD = 200;
+const DISTANCE_THRESHOLD = 300;
 
 export class Sketch {
     private readonly dim: number;
@@ -35,6 +35,12 @@ export class Sketch {
         this.sideSocketColorVectors = [];
         this.tileImageVectorSockets = [];
         this.socketVectorInverses = {};
+    }
+
+    public startOver() {
+        for (let i = 0; i < this.dim * this.dim; i++) {
+            this.grid[i] = new Cell(this.tiles.length, i);
+        }
     }
 
     public drawNext() {
@@ -132,8 +138,6 @@ export class Sketch {
                 return;
             }
 
-            p.background(0);
-
             // sort grid by entropy
             const gridCopy = this.grid.slice();
             gridCopy.sort((a, b) => {
@@ -161,6 +165,7 @@ export class Sketch {
             cellToCollapse.collapsed = true;
             cellToCollapse.options = [collapsedOption];
 
+            p.background(0);
             // painting cells
             for (let i = 0; i < this.grid.length; i++) {
                 const col = i % this.dim;
@@ -253,15 +258,6 @@ export class Sketch {
         };
     };
 
-    private fileToBase64(file: File) {
-        return new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = error => reject(error);
-        });
-    }
-
     private checkValid(arr: number[], valid: number[]) {
         for (let i = arr.length - 1; i >= 0; i--) {
             const element = arr[i];
@@ -271,12 +267,6 @@ export class Sketch {
         }
 
         return arr;
-    }
-
-    private startOver() {
-        for (let i = 0; i < this.dim * this.dim; i++) {
-            this.grid[i] = new Cell(this.tiles.length, i);
-        }
     }
 
     private populateSideSocketVectors(vector) {
