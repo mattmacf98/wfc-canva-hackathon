@@ -8,7 +8,7 @@ export class Sketch {
     private readonly dim: number;
     private readonly canvasDimension: number;
     private readonly numTiles: number;
-    private readonly imageFiles: File[];
+    private readonly imageUrls: string[];
     private tileImages: p5.Image[];
     private tiles: Tile[];
     private sideSocketColorVectors: number[][];
@@ -20,12 +20,12 @@ export class Sketch {
     private p: p5;
     private loop: boolean;
 
-    constructor(canvasDimension: number, dim: number, imageFiles: File[]) {
+    constructor(canvasDimension: number, dim: number, imageUrls: string[]) {
         this.dim = dim;
         this.canvasDimension = canvasDimension;
         this.cellSize = canvasDimension / dim;
-        this.numTiles = imageFiles.length;
-        this.imageFiles = imageFiles;
+        this.numTiles = imageUrls.length;
+        this.imageUrls = imageUrls;
 
         this.loop = false;
         this.tileImages = [];
@@ -78,8 +78,7 @@ export class Sketch {
         this.p = p;
         p.preload = async () => {
             for (let i = 0; i < this.numTiles; i++) {
-                const imageUrl = URL.createObjectURL(this.imageFiles[i]);
-                this.tileImages[i] = p.loadImage(imageUrl);
+                this.tileImages[i] = p.loadImage(this.imageUrls[i]);
             }
         }
         p.setup = () => {
