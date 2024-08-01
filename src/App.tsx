@@ -18,16 +18,26 @@ export const App = () => {
     const p5SketchRef = useRef(null);
     const [files, setFiles] = useState<File[]>([]);
     const [dimension, setDimension] = useState<number>(6);
+    const [name, setName] = useState<string>("");
 
-    async function talkToAi() {
-          const [ response ] = await window.ai.generateText(
-            {
-                prompt: "Hello world!"
-            });
+    // async function talkToAi() {
+    //       const [ response ] = await window.ai.generateText(
+    //         {
+    //             prompt: "Hello world!"
+    //         });
+    //
+    //       console.log(response);
+    // }
 
-          console.log(response);
+    const handleClick = () => {
+        window.open("http://127.0.0.1:3001/authorize", "_blank")
     }
 
+    const handleCheckIntegration = async () => {
+        const data = await fetch("http://127.0.0.1:3001/user", {credentials: "include"});
+        const res = await data.json()
+        setName(res["display_name"])
+    }
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
             setFiles(Array.from(event.target.files));
@@ -90,7 +100,10 @@ export const App = () => {
                       <Button variant="secondary" style={buttonSpacing} onClick={() => p5SketchRef.current.drawNext()}>Next</Button>
                       <Button variant="primary" style={buttonSpacing} onClick={() => p5SketchRef.current.completeDrawing()}>Auto-complete</Button>
                       <Button variant="warning" style={buttonSpacing} onClick={() => p5SketchRef.current.startOver()}>Start Over</Button>
-                      <Button onClick={() => talkToAi()}>Talk To AI</Button>
+                      {/*<Button onClick={() => talkToAi()}>Talk To AI</Button>*/}
+                      <Button onClick={handleClick}>Authorize Canva</Button>
+                      <Button onClick={handleCheckIntegration}>Check Integration</Button>
+                      {name && <div>{name}</div>}
                   </Col>
               </Row>
           </Container>
