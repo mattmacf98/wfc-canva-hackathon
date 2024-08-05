@@ -56,6 +56,28 @@ export const App = () => {
         }
     }
 
+    const uploadToCanva = async () => {
+        const canvas: HTMLCanvasElement = document.getElementsByClassName("p5Canvas")[0] as HTMLCanvasElement;
+        canvas.toBlob(async (blob) => {
+            const file = new File([blob], 'canvasImage.png', { type: 'image/png' });
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const response = await fetch('http://127.0.0.1:3001/upload?name=test', {
+                method: 'POST',
+                body: formData,
+                credentials: "include"
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to upload file');
+            } else {
+                console.log("SUCCESS!")
+            }
+        }, "image/png")
+    }
+
 
       return (
           <>
@@ -116,6 +138,7 @@ export const App = () => {
                           {/*<Button onClick={() => talkToAi()}>Talk To AI</Button>*/}
                           <Button onClick={handleClick}>Authorize Canva</Button>
                           <Button onClick={handleImportImagesFromCanva}>Import Tiles From Canva</Button>
+                          <Button onClick={uploadToCanva}>Upload Result</Button>
                       </Col>
                   </Row>
               </Container>
