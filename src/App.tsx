@@ -10,7 +10,13 @@ declare global {
     }
 }
 
+interface ICanvaFolder {
+    name: string,
+    id: string
+}
+
 interface ICanvaImageAsset {
+
     name: string,
     url: string,
     id: string
@@ -25,6 +31,12 @@ export const App = () => {
     const [imageUrls, setImageUrls] = useState<string[]>([]);
     const [dimension, setDimension] = useState<number>(6);
     const [imageTileOptions, setImageTileOptions] = useState<ICanvaImageAsset[]>([]);
+    const [folderOptions, setFolderOptions] = useState<ICanvaFolder[]>([]);
+    const [selectedFolder, setSelectedFolder] = useState<string>("root");
+
+    useEffect(() => {
+        handleImportImagesFromCanva();
+    }, [selectedFolder])
 
     // async function talkToAi() {
     //       const [ response ] = await window.ai.generateText(
@@ -40,9 +52,10 @@ export const App = () => {
     }
 
     const handleImportImagesFromCanva = async () => {
-        const data = await fetch("http://127.0.0.1:3001/folder?folderId=FAFMpgBF-zI", {credentials: "include"});
-        const res = await data.json()
-        setImageTileOptions(res)
+        const data = await fetch(`http://127.0.0.1:3001/folder?folderId=${selectedFolder}`, {credentials: "include"});
+        const res = await data.json();
+        setImageTileOptions(res.assets);
+        setFolderOptions(res.folders);
     }
 
     const handleSelectCanvasImages = (selectedImages: ICanvaImageAsset[]) => {
@@ -102,7 +115,8 @@ export const App = () => {
                       </Col>
                   </Row>
                   <Row className="flex-grow-1 justify-content-center align-items-center">
-                      <Col>
+                      <Col lg={3}/>
+                      <Col lg={6}>
                           <div style={
                               {
                                   border: '2px solid #ccc', borderRadius: '2px',
@@ -115,47 +129,73 @@ export const App = () => {
                               }
                           </div>
                       </Col>
+                      <Col lg={3}>
+                          <Row>
+                              <Col lg={12}>
+                                  <h2>Wave Function Controls</h2>
+                              </Col>
+                              <Col lg={4}>
+                                  {
+
+                                      imageUrls.length === 0 &&
+                                      <FileUploadButton onChange={handleFileChange}/>
+                                  }
+                                  {
+                                      imageUrls.length !== 0 &&
+                                      <Button variant="danger" onClick={() => setImageUrls([])}>Clear Tiles</Button>
+                                  }
+                              </Col>
+                              <Col lg={4}>
+                                  <Button variant="primary" style={buttonSpacing} onClick={() => p5SketchRef.current.completeDrawing()}>Auto-complete</Button>
+                              </Col>
+                              <Col lg={4}>
+                                  <Button variant="warning" style={buttonSpacing} onClick={() => p5SketchRef.current.startOver()}>Start Over</Button>
+                              </Col>
+                          </Row>
+
+                          <Row>
+                              <Col lg={12}>
+                                  <h2>Canva Controls</h2>
+                              </Col>
+                              <Col lg={4}>
+                                  <Button onClick={handleClick}>Authorize Canva</Button>
+                              </Col>
+                              <Col lg={4}>
+                                  <Button onClick={handleImportImagesFromCanva}>Import Tiles From Canva</Button>
+                              </Col>
+                              <Col lg={4}>
+                                  <Button onClick={uploadToCanva}>Upload Result</Button>
+                              </Col>
+                          </Row>
+                      </Col>
                   </Row>
-                  <Row className="justify-content-center mb-3">
-                      <Col xs="auto">
-                          {
-                              imageUrls.length === 0 &&
-                              <input
-                                  type="file"
-                                  multiple
-                                  onChange={handleFileChange}
-                                  accept=".jpg,.jpeg,.png,.pdf"
-                              />
-                          }
-                          {
-                              imageUrls.length !== 0 &&
-                              <Button variant="danger" onClick={() => setImageUrls([])}>Clear Tiles</Button>
-                          }
+                  <Row className="flex-grow-1 justify-content-center align-items-center">
+                      <Col lg={5}/>
+                      <Col lg={2}>
                           <Button variant="secondary" style={buttonSpacing} onClick={() => p5SketchRef.current.goBack()}>Back</Button>
                           <Button variant="secondary" style={buttonSpacing} onClick={() => p5SketchRef.current.drawNext()}>Next</Button>
-                          <Button variant="primary" style={buttonSpacing} onClick={() => p5SketchRef.current.completeDrawing()}>Auto-complete</Button>
-                          <Button variant="warning" style={buttonSpacing} onClick={() => p5SketchRef.current.startOver()}>Start Over</Button>
-                          {/*<Button onClick={() => talkToAi()}>Talk To AI</Button>*/}
-                          <Button onClick={handleClick}>Authorize Canva</Button>
-                          <Button onClick={handleImportImagesFromCanva}>Import Tiles From Canva</Button>
-                          <Button onClick={uploadToCanva}>Upload Result</Button>
                       </Col>
+                      <Col lg={5}/>
                   </Row>
               </Container>
 
-              <ImageTileSelectModal imageTileOptions={imageTileOptions} show={imageTileOptions.length > 0} onHide={() => setImageTileOptions([])}
-              onSelect={handleSelectCanvasImages}/>
+              <ImageTileSelectModal imageTileOptions={imageTileOptions} folderOptions={folderOptions} show={imageTileOptions.length > 0} onHide={() => setImageTileOptions([])}
+              onSelect={handleSelectCanvasImages} onSelectFolder={(folder: string) => setSelectedFolder(folder)} currentFolderId={selectedFolder}/>
           </>
       )
 }
 
 interface IImageTileSelectModalProps {
+    currentFolderId: string;
+    folderOptions: ICanvaFolder[];
     imageTileOptions: ICanvaImageAsset[];
     show: boolean;
     onHide: () => void;
     onSelect: (assets: ICanvaImageAsset[]) => void;
+    onSelectFolder: (folder: string) => void;
 }
-const ImageTileSelectModal: FC<IImageTileSelectModalProps> = ({imageTileOptions, show, onHide, onSelect}) => {
+const ImageTileSelectModal: FC<IImageTileSelectModalProps> = ({folderOptions,imageTileOptions,
+                                                                  show, onHide, onSelect, onSelectFolder, currentFolderId}) => {
     const [selectedImages, setSelectedImages] = useState({});
     const selectedStyle = {
         border: '3px solid black',
@@ -191,6 +231,31 @@ const ImageTileSelectModal: FC<IImageTileSelectModalProps> = ({imageTileOptions,
                                 </Card>
                             </Col>
                         ))}
+                        {folderOptions.map((folder, index) => (
+                            <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
+                                <Card
+                                    onClick={() => onSelectFolder(folder.id)}
+                                >
+                                    <Card.Body>
+                                        <Card.Img variant="top" src={"/Folder-icon.png"}/>
+                                        <Card.Title>{folder.name}</Card.Title>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        ))}
+                        {
+                            currentFolderId !== "root" &&
+                            <Col xs={12} sm={6} md={4} lg={3} className="mb-4">
+                                <Card
+                                    onClick={() => onSelectFolder("root")}
+                                >
+                                    <Card.Body>
+                                        <Card.Img variant="top" src={"/Folder-icon.png"}/>
+                                        <Card.Title>root</Card.Title>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        }
                     </Row>
                 </Container>
             </Modal.Body>
@@ -202,6 +267,43 @@ const ImageTileSelectModal: FC<IImageTileSelectModalProps> = ({imageTileOptions,
         </Modal>
     )
 }
+
+const FileUploadButton = () => {
+    const handleFileUpload = (event) => {
+        const file = event.target.files[0];
+        // Do something with the file, like upload it
+        console.log('Uploaded file:', file.name);
+    };
+
+    return (
+        <div style={{ display: 'inline-block', position: 'relative' }}>
+            <label
+                htmlFor="file-upload"
+                style={{
+                    display: 'inline-block',
+                    padding: '10px 20px',
+                    backgroundColor: '#007bff',
+                    color: '#fff',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    textAlign: 'center'
+                }}
+            >
+                Upload Files
+            </label>
+            <input
+                id="file-upload"
+                type="file"
+                multiple
+                accept=".jpg,.jpeg,.png,.pdf"
+                style={{ display: 'none' }}
+                onChange={handleFileUpload}
+            />
+        </div>
+    );
+};
 
 interface IProps {
     canvasDimension: number;
