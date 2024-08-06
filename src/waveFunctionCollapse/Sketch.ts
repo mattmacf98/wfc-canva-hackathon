@@ -38,9 +38,14 @@ export class Sketch {
     }
 
     public startOver() {
+        this.loop = false;
         for (let i = 0; i < this.dim * this.dim; i++) {
             this.grid[i] = new Cell(this.tiles.length, i);
         }
+    }
+
+    public isDone() {
+        return this.grid.filter(cell => !cell.collapsed).length === 0;
     }
 
     public drawNext() {
@@ -49,6 +54,9 @@ export class Sketch {
     }
 
     public completeDrawing() {
+        if (this.grid.filter(cell => !cell.collapsed).length == 0) {
+            this.startOver();
+        }
         this.loop = true;
         this.p.draw();
     }

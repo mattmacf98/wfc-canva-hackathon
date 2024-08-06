@@ -1,13 +1,14 @@
-import {FC, useEffect, useState} from "react";
+import {FC, useContext, useEffect, useState} from "react";
 import {ICanvaFolder, ICanvaImageAsset} from "../../interfaces/imageGeneration";
 import {Button, Card, Col, Container, Modal, Row} from "react-bootstrap";
+import {WaveFunctionCollapseContext} from "../../contexts/WaveFunctionCollapse";
 
 export interface IImageTileSelectModalProps {
     show: boolean;
     hide: () => void;
-    setImageUrls: (urls: string[]) => void;
 }
-export const ImageTileSelectModal: FC<IImageTileSelectModalProps> = ({show, hide, setImageUrls}) => {
+export const ImageTileSelectModal: FC<IImageTileSelectModalProps> = ({show, hide}) => {
+    const {setImageUrls} = useContext(WaveFunctionCollapseContext);
     const [selectedImages, setSelectedImages] = useState({});
     const [selectedFolder, setSelectedFolder] = useState<string>("root");
     const [imageTileOptions, setImageTileOptions] = useState<ICanvaImageAsset[]>([]);

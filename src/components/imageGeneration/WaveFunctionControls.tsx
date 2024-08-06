@@ -1,13 +1,14 @@
 import {Button, Col, Row, Form} from "react-bootstrap";
-import {ChangeEvent, FC} from "react";
+import {ChangeEvent, FC, useContext} from "react";
+import {WaveFunctionCollapseContext} from "../../contexts/WaveFunctionCollapse";
 
 export interface IWaveFunctionControlsProps {
-    p5SketchRef: unknown;
-    imageUrls: string[];
-    setImageUrls: (urls: string[]) => void;
+    p5SketchRef: unknown
 }
 
-export const WaveFunctionControls: FC<IWaveFunctionControlsProps> = ({p5SketchRef, imageUrls, setImageUrls}) => {
+export const WaveFunctionControls: FC<IWaveFunctionControlsProps> = ({p5SketchRef}) => {
+    const {imageUrls, setImageUrls} = useContext(WaveFunctionCollapseContext);
+
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
             setImageUrls(Array.from(event.target.files).map(file => URL.createObjectURL(file)));
@@ -82,38 +83,35 @@ export const WaveFunctionCollapseNextBackControls: FC = (props: {p5SketchRef: un
     </Row>
 )
 
-export interface IWaveFunctionCollapseImageControls {
-        setName: (name: string) => void;
-        setDimension: (dimension: number) => void;
-        name: string;
-        dimension: number;
-}
-export const WaveFunctionCollapseImageControls: FC<IWaveFunctionCollapseImageControls> = ({setName, setDimension, name, dimension}) => (
-    <Row className="justify-content-center mb-3">
+export const WaveFunctionCollapseImageControls: FC = () => {
+    const {imageName, setImageName, dimension, setDimension} = useContext(WaveFunctionCollapseContext)
+    return (
+        <Row className="justify-content-center mb-3">
             <Col xs="auto">
-                    <h2>Wave Function Collapse Generator</h2>
-                    <div className="p-3">
-                            <Form.Group controlId="exampleForm.ControlRange1">
-                                    <Form.Label>Enter a name:</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Enter name"
-                                        value={name}
-                                        onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-                                    />
+                <h2>Wave Function Collapse Generator</h2>
+                <div className="p-3">
+                    <Form.Group controlId="exampleForm.ControlRange1">
+                        <Form.Label>Enter a name:</Form.Label>
+                        <Form.Control
+                            type="text"
+                            placeholder="Enter name"
+                            value={imageName}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setImageName(e.target.value)}
+                        />
 
-                                    <Form.Label>Choose a value:</Form.Label>
-                                    <Form.Range
-                                        min={4}
-                                        max={30}
-                                        value={dimension}
-                                        onChange={(e: ChangeEvent<HTMLInputElement>) => setDimension(Number(e.target.value))}
-                                    />
-                                    <Form.Text className="text-muted">
-                                            {dimension}x{dimension}
-                                    </Form.Text>
-                            </Form.Group>
-                    </div>
+                        <Form.Label>Choose a value:</Form.Label>
+                        <Form.Range
+                            min={4}
+                            max={30}
+                            value={dimension}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setDimension(Number(e.target.value))}
+                        />
+                        <Form.Text className="text-muted">
+                            {dimension}x{dimension}
+                        </Form.Text>
+                    </Form.Group>
+                </div>
             </Col>
-    </Row>
-)
+        </Row>
+    )
+}
