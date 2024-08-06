@@ -30,13 +30,11 @@ export const App = () => {
     const p5SketchRef = useRef(null);
     const [imageUrls, setImageUrls] = useState<string[]>([]);
     const [dimension, setDimension] = useState<number>(6);
+    const [name, setName] = useState('MyImage');
     const [imageTileOptions, setImageTileOptions] = useState<ICanvaImageAsset[]>([]);
     const [folderOptions, setFolderOptions] = useState<ICanvaFolder[]>([]);
     const [selectedFolder, setSelectedFolder] = useState<string>("root");
-
-    useEffect(() => {
-        handleImportImagesFromCanva();
-    }, [selectedFolder])
+    const [uploadingImage, setUploadingImage] = useState<boolean>(false);
 
     // async function talkToAi() {
     //       const [ response ] = await window.ai.generateText(
@@ -51,11 +49,16 @@ export const App = () => {
         window.open("http://127.0.0.1:3001/authorize", "_blank")
     }
 
-    const handleImportImagesFromCanva = async () => {
-        const data = await fetch(`http://127.0.0.1:3001/folder?folderId=${selectedFolder}`, {credentials: "include"});
+    const handleImportImagesFromCanva = async (folder: string) => {
+        const data = await fetch(`http://127.0.0.1:3001/folder?folderId=${folder}`, {credentials: "include"});
         const res = await data.json();
         setImageTileOptions(res.assets);
         setFolderOptions(res.folders);
+    }
+
+    const handleSelectFolder = (folder: string) => {
+        setSelectedFolder(folder);
+        handleImportImagesFromCanva(folder);
     }
 
     const handleSelectCanvasImages = (selectedImages: ICanvaImageAsset[]) => {
@@ -70,6 +73,7 @@ export const App = () => {
     }
 
     const uploadToCanva = async () => {
+        setUploadingImage(true);
         const canvas: HTMLCanvasElement = document.getElementsByClassName("p5Canvas")[0] as HTMLCanvasElement;
         canvas.toBlob(async (blob) => {
             const file = new File([blob], 'canvasImage.png', { type: 'image/png' });
@@ -77,12 +81,13 @@ export const App = () => {
             const formData = new FormData();
             formData.append('image', file);
 
-            const response = await fetch('http://127.0.0.1:3001/upload?name=test', {
+            const response = await fetch(`http://127.0.0.1:3001/upload?name=${name}`, {
                 method: 'POST',
                 body: formData,
                 credentials: "include"
             });
 
+            setUploadingImage(false)
             if (!response.ok) {
                 throw new Error('Failed to upload file');
             } else {
@@ -100,6 +105,14 @@ export const App = () => {
                           <h2>Wave Function Collapse Generator</h2>
                           <div className="p-3">
                               <Form.Group controlId="exampleForm.ControlRange1">
+                                  <Form.Label>Enter a name:</Form.Label>
+                                  <Form.Control
+                                      type="text"
+                                      placeholder="Enter name"
+                                      value={name}
+                                      onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                                  />
+
                                   <Form.Label>Choose a value:</Form.Label>
                                   <Form.Range
                                       min={4}
@@ -161,10 +174,15 @@ export const App = () => {
                                   <Button onClick={handleClick}>Authorize Canva</Button>
                               </Col>
                               <Col lg={4}>
-                                  <Button onClick={handleImportImagesFromCanva}>Import Tiles From Canva</Button>
+                                  <Button onClick={() => handleImportImagesFromCanva(selectedFolder)}>Import Tiles From Canva</Button>
                               </Col>
                               <Col lg={4}>
-                                  <Button onClick={uploadToCanva}>Upload Result</Button>
+                                  {
+                                      uploadingImage ?
+                                          <Button disabled>Uploading...</Button>
+                                          :
+                                          <Button onClick={uploadToCanva}>Upload Image</Button>
+                                  }
                               </Col>
                           </Row>
                       </Col>
@@ -180,7 +198,7 @@ export const App = () => {
               </Container>
 
               <ImageTileSelectModal imageTileOptions={imageTileOptions} folderOptions={folderOptions} show={imageTileOptions.length > 0} onHide={() => setImageTileOptions([])}
-              onSelect={handleSelectCanvasImages} onSelectFolder={(folder: string) => setSelectedFolder(folder)} currentFolderId={selectedFolder}/>
+              onSelect={handleSelectCanvasImages} onSelectFolder={handleSelectFolder} currentFolderId={selectedFolder}/>
           </>
       )
 }
