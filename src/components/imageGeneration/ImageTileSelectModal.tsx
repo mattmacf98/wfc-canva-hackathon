@@ -9,7 +9,7 @@ export interface IImageTileSelectModalProps {
 }
 export const ImageTileSelectModal: FC<IImageTileSelectModalProps> = ({show, hide}) => {
     const {setImageUrls} = useContext(WaveFunctionCollapseContext);
-    const [selectedImages, setSelectedImages] = useState({});
+    const [selectedImages, setSelectedImages] = useState<boolean[]>([]);
     const [selectedFolder, setSelectedFolder] = useState<string>("root");
     const [imageTileOptions, setImageTileOptions] = useState<ICanvaImageAsset[]>([]);
     const [folderOptions, setFolderOptions] = useState<ICanvaFolder[]>([]);
@@ -25,9 +25,9 @@ export const ImageTileSelectModal: FC<IImageTileSelectModalProps> = ({show, hide
     }, [selectedFolder])
 
     useEffect(() => {
-        const selImgs = {};
+        const selImgs = [];
         for (let i = 0; i < imageTileOptions.length; i++) {
-            selImgs[i] = false;
+            selImgs.push(false);
         }
         setSelectedImages(selImgs);
     }, [imageTileOptions]);
@@ -56,11 +56,10 @@ export const ImageTileSelectModal: FC<IImageTileSelectModalProps> = ({show, hide
                             <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
                                 <Card
                                     style={selectedImages[index] ? selectedStyle : {}}
-                                    onClick={() => setSelectedImages(prevState => ({
-                                        ...prevState,
-                                        [index]: !prevState[index]
-                                    }))}
-                                >
+                                    onClick={() => {
+                                        const newSelectedImages = [...selectedImages.slice(0,index), !selectedImages[index], ...selectedImages.slice(index+1)]
+                                        setSelectedImages(newSelectedImages)
+                                    }}>
                                     <Card.Img variant="top" src={asset.url} alt={asset.name}/>
                                 </Card>
                             </Col>

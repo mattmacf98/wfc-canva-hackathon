@@ -9,21 +9,20 @@ declare global {
     }
     interface Window {
         ai: {
-            generateText: (messages: { messages: message[]}, options?: { onStreamResult: (res: { text: string }) => void }) => Promise<void>;
+            generateText: (messages: { messages: message[]}, options?: { onStreamResult: (res: { text: string }) => void }) => Promise<any[]>;
         }
     }
 }
 
 const initialPrompt = "You are a helpful assistant living on a client side of a web application. The user wants to chat with you to invoke functionality on the website." +
-    "It is extremely important that every message that you respond with be in json format with fields message, setImageDimension, setImageName, triggerImageGeneration. " +
-    "message should always be a non empty string, setImageName can be a string for the name of the image or the empty string if you do not wish to invoke setImageName" +
-    " setImageDimension must be a number between 4 and 30 or -1 if you do not wish to invoke setImageDimension, triggerImageGeneration must be a boolean either true or false" +
-    "indicating if you want to generate a new image.";
-
+    "It is extremely important that every message that you respond with be in json format with fields message, and imageGenerations" +
+    "imageGenerations is an array of JSON objects with fields dimension and imageName"+
+    "message should always be a non empty string, imageName should always be a non empty string" +
+    "dimension must be a number between 4 and 30";
 
 export interface IAIProps {
-    p5SketchRef: unknown,
-    canvaControlsRef: unknown
+    p5SketchRef: any,
+    canvaControlsRef: any
 }
 const AI: FC<IAIProps> = ({p5SketchRef, canvaControlsRef}) => {
     const {setDimension, setImageName} = useContext(WaveFunctionCollapseContext);
@@ -32,14 +31,13 @@ const AI: FC<IAIProps> = ({p5SketchRef, canvaControlsRef}) => {
     const [aiResponse, setAiResponse] = useState('');
     const [messages, setMessages] = useState([{role: "system", content: initialPrompt}])
 
-    const handleSubmit = (event) => {
+    const handleSubmit = (event: any) => {
         event.preventDefault();
         setMessages([...messages, {role: "user", content: inputValue}])
         setInputValue('');
     }
 
     useEffect(() => {
-        console.log(messages)
         if (messages.length === 1) return;
 
         if (messages[messages.length - 1].role !== "assistant") {
@@ -47,28 +45,30 @@ const AI: FC<IAIProps> = ({p5SketchRef, canvaControlsRef}) => {
             chatAI();
         } else {
             const responseJson = JSON.parse(messages[messages.length - 1].content);
-            console.log(responseJson)
-            if (responseJson.setImageDimension && responseJson.setImageDimension !== -1) {
-                setDimension(responseJson.setImageDimension);
-            }
-            if (responseJson.setImageName && responseJson.setImageName !== "") {
-                setImageName(responseJson.setImageName)
-            }
-            if (responseJson.triggerImageGeneration && responseJson.triggerImageGeneration === true) {
-                setTimeout(() => {
-                    p5SketchRef.current.completeDrawing();
-                    const intervalId = setInterval(() => {
-                        if (p5SketchRef.current.isDone()) {
-                            canvaControlsRef.current.uploadToCanva();
-                            clearInterval(intervalId);
-                        }
-                    }, 500)
-                }, 500)
-
-            }
-            setAiResponse(responseJson.message);
+            const {imageGenerations, message} = responseJson
+            generateImages(0, imageGenerations)
+            setAiResponse(message);
         }
     }, [messages])
+
+    const generateImages = async (index: number, imageGenerations: any[]) => {
+        if (index >= imageGenerations.length) {
+            return;
+        }
+        setDimension(imageGenerations[index].dimension);
+        setImageName(imageGenerations[index].imageName);
+
+        setTimeout(() => {
+            p5SketchRef.current.completeDrawing();
+            const intervalId = setInterval(() => {
+                if (p5SketchRef.current.isDone()) {
+                    canvaControlsRef.current.uploadToCanva(imageGenerations[index].imageName);
+                    clearInterval(intervalId);
+                    generateImages(index + 1, imageGenerations)
+                }
+            }, 500)
+        }, 500)
+    }
 
     const chatAI = async () => {
         const [ response ] = await window.ai.generateText({

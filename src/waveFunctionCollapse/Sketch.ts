@@ -15,9 +15,9 @@ export class Sketch {
     private tileImageVectorSockets: number[][];
     private grid: Cell[];
     private stateStack: Cell[][];
-    private socketVectorInverses: unknown;
+    private socketVectorInverses: number[];
     private cellSize: number;
-    private p: p5;
+    private p: p5 | undefined;
     private loop: boolean;
 
     constructor(canvasDimension: number, dim: number, imageUrls: string[]) {
@@ -27,6 +27,7 @@ export class Sketch {
         this.numTiles = imageUrls.length;
         this.imageUrls = imageUrls;
 
+        this.p = undefined;
         this.loop = false;
         this.tileImages = [];
         this.grid = [];
@@ -34,7 +35,7 @@ export class Sketch {
         this.tiles = [];
         this.sideSocketColorVectors = [];
         this.tileImageVectorSockets = [];
-        this.socketVectorInverses = {};
+        this.socketVectorInverses = [];
     }
 
     public startOver() {
@@ -50,7 +51,7 @@ export class Sketch {
 
     public drawNext() {
         this.loop = false;
-        this.p.draw();
+        this.p?.draw();
     }
 
     public completeDrawing() {
@@ -58,26 +59,26 @@ export class Sketch {
             this.startOver();
         }
         this.loop = true;
-        this.p.draw();
+        this.p?.draw();
     }
 
     public goBack() {
         this.loop = false;
         if (this.stateStack.length > 0) {
-            this.grid = this.stateStack.pop();
+            this.grid = this.stateStack.pop()!;
         }
 
-        this.p.background(0);
+        this.p?.background(0);
         for (let i = 0; i < this.grid.length; i++) {
             const col = i % this.dim;
             const row =  Math.floor(i / this.dim);
 
             if (this.grid[i].collapsed) {
-                this.p.image(this.tiles[this.grid[i].options[0]].img, col * this.cellSize, row * this.cellSize, this.cellSize, this.cellSize);
+                this.p?.image(this.tiles[this.grid[i].options[0]].img, col * this.cellSize, row * this.cellSize, this.cellSize, this.cellSize);
             } else {
-                this.p.fill(0);
-                this.p.stroke(255);
-                this.p.rect(col * this.cellSize, row * this.cellSize, this.cellSize, this.cellSize);
+                this.p?.fill(0);
+                this.p?.stroke(255);
+                this.p?.rect(col * this.cellSize, row * this.cellSize, this.cellSize, this.cellSize);
             }
         }
     }
@@ -154,13 +155,12 @@ export class Sketch {
             // collapse a cell
             const minEntropy = gridCopy.filter(cell => !cell.collapsed)[0].options.length;
             const candidateCellsToCollapse = gridCopy.filter(cell => !cell.collapsed).filter(cell => cell.options.length === minEntropy);
-            const cellToCollapse = p.random(candidateCellsToCollapse);
-            const collapsedOption = p.random(cellToCollapse.options);
+            const cellToCollapse: Cell = p.random(candidateCellsToCollapse);
+            const collapsedOption: number | undefined = p.random(cellToCollapse.options);
 
             if (collapsedOption === undefined) {
                 if (this.stateStack.length > 0) {
-                    console.log("BACKTRACKING");
-                    this.grid = this.stateStack.pop();
+                    this.grid = this.stateStack.pop()!;
                 } else {
                     this.startOver();
                 }
@@ -198,7 +198,7 @@ export class Sketch {
 
             cellCheckStack.push(cellToCollapse)
             while (cellCheckStack.length > 0) {
-                const cellToCheck = cellCheckStack.pop();
+                const cellToCheck: Cell = cellCheckStack.pop()!;
                 checkedCells[cellToCheck.index] = true;
 
                 const index = cellToCheck.index;
@@ -246,7 +246,7 @@ export class Sketch {
                 if (col > 0) {
                     const left = this.grid[index - 1];
                     if (!checkedCells[left.index]) {
-                        const validOptions = [...new Set(cellToCheck.options.flatMap(option => this.tiles[option].left))];
+                        const validOptions: number[] = [...new Set(cellToCheck.options.flatMap(option => this.tiles[option].left))];
                         const newOptions = this.checkValid(left.options, validOptions);
 
                         if (newOptions.length !== left.options.length) {
@@ -276,7 +276,7 @@ export class Sketch {
         return arr;
     }
 
-    private populateSideSocketVectors(vector) {
+    private populateSideSocketVectors(vector: number[]) {
         for (let i = 0; i < this.sideSocketColorVectors.length; i++) {
             const dist = this.getDistance(this.sideSocketColorVectors[i], vector);
             if (dist < DISTANCE_THRESHOLD) {

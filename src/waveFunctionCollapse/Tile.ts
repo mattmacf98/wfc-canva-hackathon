@@ -1,14 +1,14 @@
 import p5 from "p5";
 
 export class Tile {
-    img: p5.Image;
+    img: p5.Image | p5.__Graphics__ & p5;
     private edges: number[];
     up: number[];
     right: number[];
     down: number[];
     left: number[];
 
-    constructor(img, edges) {
+    constructor(img: p5.Image | p5.__Graphics__ & p5, edges: number[]) {
         this.img = img;
         this.edges = edges;
 
@@ -18,25 +18,25 @@ export class Tile {
         this.left = [];
     }
 
-    public analyze(tiles, vectorInversLookup) {
+    public analyze(tiles: Tile[], vectorInverseLookup: number[]) {
         for (let i = 0; i < tiles.length; i++) {
             // UP
-            if (tiles[i].edges[2] === vectorInversLookup[this.edges[0]]) {
+            if (tiles[i].edges[2] === vectorInverseLookup[this.edges[0]]) {
                 this.up.push(i);
             }
 
             // RIGHT
-            if (tiles[i].edges[3] === vectorInversLookup[this.edges[1]]) {
+            if (tiles[i].edges[3] === vectorInverseLookup[this.edges[1]]) {
                 this.right.push(i);
             }
 
             // DOWN
-            if (tiles[i].edges[0] === vectorInversLookup[this.edges[2]]) {
+            if (tiles[i].edges[0] === vectorInverseLookup[this.edges[2]]) {
                 this.down.push(i);
             }
 
             // LEFT
-            if (tiles[i].edges[1] === vectorInversLookup[this.edges[3]]) {
+            if (tiles[i].edges[1] === vectorInverseLookup[this.edges[3]]) {
                 this.left.push(i);
             }
         }

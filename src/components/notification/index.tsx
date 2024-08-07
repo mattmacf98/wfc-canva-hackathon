@@ -8,7 +8,6 @@ const Notification = () => {
     if (notifications.length === 0) {
         return null;
     }
-    console.log(notifications)
 
     return (
         <Container>

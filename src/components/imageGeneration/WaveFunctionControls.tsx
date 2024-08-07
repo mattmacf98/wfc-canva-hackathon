@@ -3,7 +3,7 @@ import {ChangeEvent, FC, useContext} from "react";
 import {WaveFunctionCollapseContext} from "../../contexts/WaveFunctionCollapse";
 
 export interface IWaveFunctionControlsProps {
-    p5SketchRef: unknown
+    p5SketchRef: any
 }
 
 export const WaveFunctionControls: FC<IWaveFunctionControlsProps> = ({p5SketchRef}) => {
@@ -70,7 +70,7 @@ const FileUploadButton = (props: {handleFileUpload: (event: ChangeEvent<HTMLInpu
             </div>
 );
 
-export const WaveFunctionCollapseNextBackControls: FC = (props: {p5SketchRef: unknown}) => (
+export const WaveFunctionCollapseNextBackControls: FC<{ p5SketchRef: any}> = (props: {p5SketchRef: any}) => (
     <Row className="flex-grow-1 justify-content-center align-items-center">
             <Col lg={5}/>
             <Col lg={1}>

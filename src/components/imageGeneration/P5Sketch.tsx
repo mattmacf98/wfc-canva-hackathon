@@ -4,9 +4,10 @@ import p5 from "p5";
 import {WaveFunctionCollapseContext} from "../../contexts/WaveFunctionCollapse";
 
 export interface IP5SketchProps {
-    canvasDimension: number
+    canvasDimension: number,
+    ref: any
 }
-export const P5Sketch: FC = forwardRef((props: IP5SketchProps, ref) => {
+export const P5Sketch: FC<IP5SketchProps> = forwardRef((props: IP5SketchProps, ref) => {
     const {dimension, imageUrls} = useContext(WaveFunctionCollapseContext);
     const p5Ref = useRef<HTMLDivElement | null>(null);
     const sketchRef = useRef<Sketch | null>(null);

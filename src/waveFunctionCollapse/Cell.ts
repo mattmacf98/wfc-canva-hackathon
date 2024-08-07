@@ -3,7 +3,7 @@ export class Cell {
     public index: number;
     public options: number[];
 
-    constructor(value, index) {
+    constructor(value: number | number[], index: number) {
         this.collapsed = false;
         this.index = index;
         if (value instanceof Array) {

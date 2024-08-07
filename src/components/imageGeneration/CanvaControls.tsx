@@ -8,9 +8,10 @@ const handleAuthorizeClick = () => {
 }
 export interface ICanvaControlsProps {
     openImageSelectModal: () => void
+    ref: any
 }
 
-export const CanvaControls: FC = forwardRef((props: ICanvaControlsProps, ref) => {
+export const CanvaControls: FC<ICanvaControlsProps> = forwardRef((props: ICanvaControlsProps, ref) => {
     const {imageName} = useContext(WaveFunctionCollapseContext);
     const {addNotification} = useContext(NotificationsContext);
     const [uploadingImage, setUploadingImage] = useState<boolean>(false);
@@ -25,7 +26,7 @@ export const CanvaControls: FC = forwardRef((props: ICanvaControlsProps, ref) =>
         setUploadingImage(true);
         const canvas: HTMLCanvasElement = document.getElementsByClassName("p5Canvas")[0] as HTMLCanvasElement;
         canvas.toBlob(async (blob) => {
-            const file = new File([blob], 'canvasImage.png', { type: 'image/png' });
+            const file = new File([blob!], 'canvasImage.png', { type: 'image/png' });
 
             const formData = new FormData();
             formData.append('image', file);
