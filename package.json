@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "clean": "rm -rf ./node_modules && rm -rf ./dist && npm install",
+    "build": "npm run clean && tsc -b && vite build",
     "start": "serve -s ./dist -l 3000",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"

@@ -2,9 +2,10 @@ import {FC, forwardRef, useContext, useImperativeHandle, useState} from "react";
 import {Button, Col, Row} from "react-bootstrap";
 import {WaveFunctionCollapseContext} from "../../contexts/WaveFunctionCollapse";
 import {NotificationsContext} from "../../contexts/Notifications";
+import {backendHost} from "../../config";
 
 const handleAuthorizeClick = () => {
-    window.open("http://127.0.0.1:3001/authorize", "_blank")
+    window.open(`${backendHost}/authorize`, "_blank")
 }
 export interface ICanvaControlsProps {
     openImageSelectModal: () => void
@@ -31,7 +32,7 @@ export const CanvaControls: FC<ICanvaControlsProps> = forwardRef((props: ICanvaC
             const formData = new FormData();
             formData.append('image', file);
 
-            const response = await fetch(`http://127.0.0.1:3001/upload?name=${name}`, {
+            const response = await fetch(`${backendHost}/upload?name=${name}`, {
                 method: 'POST',
                 body: formData,
                 credentials: "include"

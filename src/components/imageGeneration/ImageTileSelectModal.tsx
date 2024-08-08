@@ -2,13 +2,17 @@ import {FC, useContext, useEffect, useState} from "react";
 import {ICanvaFolder, ICanvaImageAsset} from "../../interfaces/imageGeneration";
 import {Button, Card, Col, Container, Modal, Row} from "react-bootstrap";
 import {WaveFunctionCollapseContext} from "../../contexts/WaveFunctionCollapse";
+import {backendHost} from "../../config";
+import {NotificationsContext} from "../../contexts/Notifications";
 
 export interface IImageTileSelectModalProps {
     show: boolean;
     hide: () => void;
 }
 export const ImageTileSelectModal: FC<IImageTileSelectModalProps> = ({show, hide}) => {
+    const {addNotification} = useContext(NotificationsContext)
     const {setImageUrls} = useContext(WaveFunctionCollapseContext);
+
     const [selectedImages, setSelectedImages] = useState<boolean[]>([]);
     const [selectedFolder, setSelectedFolder] = useState<string>("root");
     const [imageTileOptions, setImageTileOptions] = useState<ICanvaImageAsset[]>([]);
@@ -21,8 +25,10 @@ export const ImageTileSelectModal: FC<IImageTileSelectModalProps> = ({show, hide
     };
 
     useEffect(() => {
-        importImagesFromCanva()
-    }, [selectedFolder])
+        if (show) {
+            importImagesFromCanva()
+        }
+    }, [selectedFolder, show])
 
     useEffect(() => {
         const selImgs = [];
@@ -38,8 +44,12 @@ export const ImageTileSelectModal: FC<IImageTileSelectModalProps> = ({show, hide
     }
 
     const importImagesFromCanva = async () => {
-        const data = await fetch(`http://127.0.0.1:3001/folder?folderId=${selectedFolder}`, {credentials: "include"});
+        const data = await fetch(`${backendHost}/folder?folderId=${selectedFolder}`, {credentials: "include"});
         const res = await data.json();
+        if (res.error) {
+            addNotification({type: "Danger", message: res.error})
+            return;
+        }
         setImageTileOptions(res.assets);
         setFolderOptions(res.folders);
     }
