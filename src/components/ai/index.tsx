@@ -1,6 +1,7 @@
-import {FC, useContext, useEffect, useState} from "react";
-import {Button, Form} from "react-bootstrap";
+import {CSSProperties, FC, useContext, useEffect, useState} from "react";
+import {Col, Container, Form, Row} from "react-bootstrap";
 import {WaveFunctionCollapseContext} from "../../contexts/WaveFunctionCollapse";
+import ReactLoading from 'react-loading'
 
 declare global {
     type message = {
@@ -24,11 +25,40 @@ export interface IAIProps {
     p5SketchRef: any,
     canvaControlsRef: any
 }
+
+const messageInputStyle: CSSProperties = {
+    border: "none",
+    outline: "none",
+    width: "100%"
+}
+
+const assistantBubbleStyle: CSSProperties = {
+    backgroundColor: 'white',
+    borderRadius: '20px',
+    padding: '10px 15px',
+    maxWidth: '60%',
+    alignSelf: 'flex-start',
+    marginBottom: '10px',
+    wordWrap: 'break-word',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+};
+
+const userBubbleStyle: CSSProperties = {
+    backgroundColor: '#F5F5FA',
+    color: '#7878AB',
+    borderRadius: '20px',
+    padding: '10px 15px',
+    maxWidth: '60%',
+    alignSelf: 'flex-end',
+    marginBottom: '16px',
+    wordWrap: 'break-word',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+};
+
 const AI: FC<IAIProps> = ({p5SketchRef, canvaControlsRef}) => {
     const {setDimension, setImageName} = useContext(WaveFunctionCollapseContext);
     const [loadingAIResponse, setLoadingAIResponse] = useState(false);
     const [inputValue, setInputValue] = useState('');
-    const [aiResponse, setAiResponse] = useState('');
     const [messages, setMessages] = useState([{role: "system", content: initialPrompt}])
 
     const handleSubmit = (event: any) => {
@@ -45,9 +75,8 @@ const AI: FC<IAIProps> = ({p5SketchRef, canvaControlsRef}) => {
             chatAI();
         } else {
             const responseJson = JSON.parse(messages[messages.length - 1].content);
-            const {imageGenerations, message} = responseJson
+            const {imageGenerations} = responseJson
             generateImages(0, imageGenerations)
-            setAiResponse(message);
         }
     }, [messages])
 
@@ -89,24 +118,51 @@ const AI: FC<IAIProps> = ({p5SketchRef, canvaControlsRef}) => {
     }
 
     return (
-        <>
-            <Form onSubmit={handleSubmit}>
-                <Form.Group controlId="formInput">
-                    <Form.Label>Enter text</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Enter text..."
-                        value={inputValue}
-                        onChange={(event) => setInputValue(event.target.value)}
-                    />
-                </Form.Group>
-                <Button variant="primary" type="submit">
-                    Submit
-                </Button>
-            </Form>
-            { loadingAIResponse && <p>Loading AI response...</p>}
-            { !loadingAIResponse && <p>{aiResponse}</p> }
-        </>
+        <Col className="d-flex flex-column" style={{ height: '100%'}}>
+            <Row className="flex-fill">
+                <Container>
+                    <Col style={{ display: 'flex', flexDirection: 'column', padding:24 }}>
+                        {messages.filter(( message) => message.role !== "system" ).map(({content, role}, index) => {
+                            if (role === "assistant") {
+                                return (
+                                    <Row key={index} style={{display: "flex", justifyContent: "flex-start"}}>
+                                        <div style={assistantBubbleStyle}>
+                                            {JSON.parse(content)["message"]}
+                                        </div>
+                                    </Row>
+                                )
+                            } else {
+                                return (
+                                    <Row key={index} style={{display: "flex", justifyContent: "flex-end"}} >
+                                        <div style={userBubbleStyle}>
+                                            {content}
+                                        </div>
+                                    </Row>
+                                )
+                            }
+                        })}
+                        {loadingAIResponse && <ReactLoading type={"bubbles"} color={"#7878AB"} height={45} width={45} />}
+                    </Col>
+                </Container>
+            </Row>
+            <Row lg={1}>
+                <div style={{borderTop: "3px solid #e8ebeb", width: "100%", padding: 24}}>
+                    <Container>
+                        <Form onSubmit={handleSubmit}>
+                            <Form.Group controlId="formInput">
+                                <Form.Control
+                                    style={messageInputStyle}
+                                    type="text"
+                                    placeholder="Enter text..."
+                                    value={inputValue}
+                                    onChange={(event) => setInputValue(event.target.value)}
+                                />
+                            </Form.Group>
+                        </Form>
+                    </Container>
+                </div>
+            </Row>
+        </Col>
     );
 }
 

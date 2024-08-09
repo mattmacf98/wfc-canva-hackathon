@@ -1,6 +1,7 @@
-import {Button, Col, Row, Form} from "react-bootstrap";
-import {ChangeEvent, FC, useContext} from "react";
+import {Button, Col, Row, Form, Container} from "react-bootstrap";
+import {ChangeEvent, CSSProperties, FC, useContext} from "react";
 import {WaveFunctionCollapseContext} from "../../contexts/WaveFunctionCollapse";
+import { BsChevronLeft, BsChevronRight } from 'react-icons/bs';
 
 export interface IWaveFunctionControlsProps {
     p5SketchRef: any
@@ -15,29 +16,52 @@ export const WaveFunctionControls: FC<IWaveFunctionControlsProps> = ({p5SketchRe
         }
     }
 
-    return (
-        <Row>
-            <Col lg={12}>
-                <h2>Wave Function Controls</h2>
-            </Col>
-            <Col lg={4}>
-                {
+    const buttonStyle: CSSProperties = {
+        color: '#6f6fa2',
+        backgroundColor: '#F5F5FA',
+        border: 'none',
+        borderRadius: '10px',
+        padding: '10px 20px',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+        width: 164
+    };
 
-                    imageUrls.length === 0 &&
-                    <FileUploadButton handleFileUpload={handleFileChange}/>
-                }
-                {
-                    imageUrls.length !== 0 &&
-                    <Button variant="danger" onClick={() => setImageUrls([])}>Clear Tiles</Button>
-                }
-            </Col>
-            <Col lg={4}>
-                <Button variant="primary" onClick={() => p5SketchRef.current.completeDrawing()}>Auto-complete</Button>
-            </Col>
-            <Col lg={4}>
-                <Button variant="warning" onClick={() => p5SketchRef.current.startOver()}>Start Over</Button>
-            </Col>
-        </Row>
+    const containerStyle: CSSProperties = {
+        border: "1px solid #f5f5f5",
+        margin: 8,
+        textAlign: "center",
+        width: "60%",
+        padding: 8,
+        borderRadius: 10,
+        boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
+    }
+
+    return (
+        <Container>
+            <Row style={containerStyle}>
+                <Col lg={12} className="my-2">
+                    <h3>WFC Controls</h3>
+                </Col>
+                <Col lg={12} className="my-2">
+                    <Button onClick={() => p5SketchRef.current.startOver()} style={buttonStyle}>Start Over</Button>
+                </Col>
+                <Col lg={12} className="my-2">
+                    <Button onClick={() => p5SketchRef.current.completeDrawing()} style={buttonStyle}>Auto Complete</Button>
+                </Col>
+                <Col lg={12} className="my-2">
+                    {
+
+                        imageUrls.length === 0 &&
+                        <FileUploadButton handleFileUpload={handleFileChange}/>
+                    }
+                    {
+                        imageUrls.length !== 0 &&
+                        <Button variant="danger" onClick={() => setImageUrls([])} style={{...buttonStyle, background: "red", color: "white"}}>Clear Tiles</Button>
+                    }
+                </Col>
+            </Row>
+        </Container>
+
     )
 }
 
@@ -46,15 +70,17 @@ const FileUploadButton = (props: {handleFileUpload: (event: ChangeEvent<HTMLInpu
                     <label
                         htmlFor="file-upload"
                         style={{
-                                display: 'inline-block',
-                                padding: '10px 20px',
-                                backgroundColor: '#007bff',
-                                color: '#fff',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '16px',
-                                fontWeight: 'bold',
-                                textAlign: 'center'
+                            color: '#6f6fa2',
+                            backgroundColor: '#F5F5FA',
+                            border: 'none',
+                            borderRadius: '10px',
+                            padding: '10px 20px',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            width: 164,
+                            display: 'inline-block',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            textAlign: 'center'
                         }}
                     >
                             Upload Files
@@ -73,11 +99,17 @@ const FileUploadButton = (props: {handleFileUpload: (event: ChangeEvent<HTMLInpu
 export const WaveFunctionCollapseNextBackControls: FC<{ p5SketchRef: any}> = (props: {p5SketchRef: any}) => (
     <Row className="flex-grow-1 justify-content-center align-items-center">
             <Col lg={5}/>
-            <Col lg={1}>
-                    <Button variant="secondary" onClick={() => props.p5SketchRef.current.goBack()}>Back</Button>
+            <Col lg={1} className="text-center">
+                <div onClick={() => props.p5SketchRef.current.goBack()} className="icon-button">
+                    <BsChevronLeft size={32} />
+                    <div>Back</div>
+                </div>
             </Col>
-            <Col lg={1}>
-                    <Button variant="secondary" onClick={() => props.p5SketchRef.current.drawNext()}>Next</Button>
+            <Col lg={1} className="text-center">
+                <div onClick={() => props.p5SketchRef.current.drawNext()} className="icon-button">
+                    <BsChevronRight size={32} />
+                    <div>Next</div>
+                </div>
             </Col>
             <Col lg={5}/>
     </Row>
@@ -85,33 +117,49 @@ export const WaveFunctionCollapseNextBackControls: FC<{ p5SketchRef: any}> = (pr
 
 export const WaveFunctionCollapseImageControls: FC = () => {
     const {imageName, setImageName, dimension, setDimension} = useContext(WaveFunctionCollapseContext)
-    return (
-        <Row className="justify-content-center mb-3">
-            <Col xs="auto">
-                <h2>Wave Function Collapse Generator</h2>
-                <div className="p-3">
-                    <Form.Group controlId="exampleForm.ControlRange1">
-                        <Form.Label>Enter a name:</Form.Label>
-                        <Form.Control
-                            type="text"
-                            placeholder="Enter name"
-                            value={imageName}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => setImageName(e.target.value)}
-                        />
+    const nameInputStyle: CSSProperties = {
+        fontSize: "2em",
+        fontWeight: "bold",
+        border: "none",
+        outline: "none",
+        width: "100%",
+        textAlign: "center"
+    }
 
-                        <Form.Label>Choose a value:</Form.Label>
-                        <Form.Range
-                            min={4}
-                            max={30}
-                            value={dimension}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => setDimension(Number(e.target.value))}
-                        />
-                        <Form.Text className="text-muted">
-                            {dimension}x{dimension}
-                        </Form.Text>
-                    </Form.Group>
-                </div>
-            </Col>
-        </Row>
+    const dimensionTextStyle: CSSProperties = {
+        textAlign: "center",
+        width: "100%",
+        display: "block"
+    }
+
+    return (
+        <Container>
+            <Row className="justify-content-center mb-3">
+                <Col xs="auto">
+                    <div className="p-3">
+                        <Form.Group controlId="exampleForm.ControlRange1">
+                            <Form.Control
+                                style={nameInputStyle}
+                                type="text"
+                                placeholder="Enter name"
+                                value={imageName}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setImageName(e.target.value)}
+                            />
+
+                            <Form.Range
+                                min={4}
+                                max={30}
+                                value={dimension}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setDimension(Number(e.target.value))}
+                            />
+                            <Form.Text className="text-muted" style={dimensionTextStyle}>
+                                {dimension}x{dimension}
+                            </Form.Text>
+                        </Form.Group>
+                    </div>
+                </Col>
+            </Row>
+        </Container>
+
     )
 }
